@@ -1,13 +1,14 @@
 'use strict'
-var express = require('express')
-var formidable = require('formidable')
-var fs = require('fs')
-var asyncFs = require('async-file')
-var util = require('util')
-var log = require('bunyan').getLogger('archives')
-var md5 = require('md5')
-var router = express.Router()
-var tokens = {}
+const express = require('express')
+const formidable = require('formidable')
+const fs = require('fs')
+const asyncFs = require('async-file')
+const util = require('util')
+const log = require('bunyan').getLogger('archives')
+const md5 = require('md5')
+const router = express.Router()
+const HttpStatus = require('http-status-codes')
+let tokens = {}
 
 /**
  * @api {post} / Send an archive with stuff to dockerize
@@ -22,7 +23,7 @@ var tokens = {}
  */
 router.post('/', async function (req, res) {
   const uploadDir = 'files/'
-  var form = new formidable.IncomingForm({ uploadDir: uploadDir })
+  let form = new formidable.IncomingForm({ uploadDir: uploadDir })
   form.parse(req, async function (err, fields, files) {
     try {
       let token = fields.token
@@ -37,7 +38,10 @@ router.post('/', async function (req, res) {
   })
 })
 
-router.get('/', async function ({ body: { filePath, token } }, res) {
+router.get('/', async function (req, res) {
+  let filePath = req.query.filePath
+  let token = req.query.token
+
   if (tokens[filePath] === token) {
     console.log('ok')
   } else {
