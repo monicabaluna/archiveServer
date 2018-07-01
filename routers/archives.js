@@ -1,53 +1,58 @@
 'use strict'
 const express = require('express')
-const formidable = require('formidable')
-const fs = require('fs')
 const asyncFs = require('async-file')
-const util = require('util')
+const fs = require('fs')
 const log = require('bunyan').getLogger('archives')
-const md5 = require('md5')
+const sha = require('sha1')
 const router = express.Router()
 const HttpStatus = require('http-status-codes')
-let tokens = {}
+const bearerToken = require('express-bearer-token')
+
+const token = '1234'
+
+const pathExists = path =>
+  new Promise((resolve, reject) => {
+    fs.access(path, fs.constants.F_OK, err => {
+      if (err !== null && err.code !== 'ENOENT') return reject(err)
+      resolve(err === null)
+    })
+  })
+
+router.use(bearerToken())
+router.use(function (req, res, next) {
+  if (req.token !== token) res.sendStatus(HttpStatus.UNAUTHORIZED)
+  else next()
+})
 
 /**
- * @api {post} / Send an archive with stuff to dockerize
- * @apiName Post
- * @apiGroup User
+ * @api {get} / Download an archive with stuff to dockerize
+ * @apiName Get
+ * @apiGroup Archive
  *
- * @apiParam {String} username Username
+ * @apiParam {String} filePath FilePath
  *
  * @apiSuccess {Number} err 0
  * @apiError {String} err Error
  * @apiError {String} statusError error
  */
-router.post('/', async function (req, res) {
-  const uploadDir = 'files/'
-  let form = new formidable.IncomingForm({ uploadDir: uploadDir })
-  form.parse(req, async function (err, fields, files) {
-    try {
-      let token = fields.token
-      let filePath = files.filetoupload.path
-      tokens[filePath] = token
-
-      log.info(`Upload zip to ${filePath}`)
-      res.send(util.inspect({ fields: fields, files: files }))
-    } catch (err) {
-      throw err
-    }
-  })
-})
-
 router.get('/', async function (req, res) {
-  let filePath = req.query.filePath
-  let token = req.query.token
+  try {
+    let filePath = `${__dirname}/../files/${req.query.filePath}`
+    let valid = await pathExists(filePath)
 
-  if (tokens[filePath] === token) {
-    console.log('ok')
-  } else {
-    console.log('not ok')
+    if (!valid) {
+      res.sendStatus(HttpStatus.BAD_REQUEST)
+    } else {
+      let fileContents = asyncFs.readFile(filePath)
+      let checksum = sha(fileContents)
+      log.info(filePath)
+
+      res.set('checksum', checksum)
+      await res.download(filePath)
+    }
+  } catch (err) {
+    console.error(err)
   }
-  res.sendStatus(HttpStatus.OK)
 })
 
 module.exports.router = router
