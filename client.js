@@ -1,5 +1,17 @@
-const request = require('request-promise')
 const asyncFs = require('async-file')
+const io = require('socket.io-client')
+const request = require('request-promise')
+const uri = 'http://localhost:3000/api/v1/containers/build'
+const socket = io(uri)
+
+socket.on('disconnect', function () {
+  console.log('build process ended')
+  process.exit(0)
+})
+
+socket.on('message', function (data) {
+  console.log('message: ', data)
+})
 
 async function main () {
   try {
@@ -34,7 +46,7 @@ async function main () {
 
     let options = {
       method: 'POST',
-      uri: 'http://localhost:3000/api/v1/containers/build',
+      uri: uri,
       body: jsonbody,
       json: true
     }
