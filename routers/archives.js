@@ -8,7 +8,7 @@ const router = express.Router()
 const HttpStatus = require('http-status-codes')
 const bearerToken = require('express-bearer-token')
 
-const token = '1234'
+const token = '1234-sunt-praf'
 
 const pathExists = path =>
   new Promise((resolve, reject) => {

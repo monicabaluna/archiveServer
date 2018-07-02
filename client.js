@@ -1,8 +1,10 @@
 const asyncFs = require('async-file')
 const io = require('socket.io-client')
 const request = require('request-promise')
+
 const uri = 'http://localhost:3000/api/v1/containers/build'
-const socket = io(uri)
+const clientToken = '1234-sunt-praf'
+const socket = io(uri, { query: { clientToken } })
 
 socket.on('disconnect', function () {
   console.log('build process ended')
@@ -10,7 +12,7 @@ socket.on('disconnect', function () {
 })
 
 socket.on('message', function (data) {
-  console.log('message: ', data)
+  console.log(data)
 })
 
 async function main () {
@@ -20,7 +22,7 @@ async function main () {
     )
 
     let jsonbody = {
-      clientToken: '1234',
+      clientToken,
       registryUsername: credentials.username,
       registryPassword: credentials.password,
       registry: 'docker.io'
