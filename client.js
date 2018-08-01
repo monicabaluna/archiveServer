@@ -28,6 +28,13 @@ async function main () {
       registry: 'docker.io'
     }
 
+    let to_log = {
+      clientToken: '***',
+      registryUsername: credentials.username,
+      registryPassword: '*****',
+      registry: 'docker.io'
+    }
+
     switch (process.argv[2]) {
       case 'git':
         jsonbody.sourceType = 'git'
@@ -36,10 +43,20 @@ async function main () {
         jsonbody.gitToken = credentials.gitToken
         jsonbody.gitBranch = 'branch1'
         jsonbody.gitCommitSHA = '4fd86adc8d128f1e070738d901611b73e9708400'
+
+        to_log.sourceType = 'git'
+        to_log.downloadAddress =
+          'https://github.com/monicabaluna/wyliTheRepo.git'
+        to_log.gitToken = credentials.gitToken
+        to_log.gitBranch = 'branch1'
+        to_log.gitCommitSHA = '4fd86adc8d128f1e070738d901611b73e9708400'
         break
       case 'zip':
         jsonbody.sourceType = 'zip'
         jsonbody.downloadAddress =
+          'http://localhost:3001/api/v1/archives?filePath=boop.zip'
+        to_log.sourceType = 'zip'
+        to_log.downloadAddress =
           'http://localhost:3001/api/v1/archives?filePath=boop.zip'
         break
       default:
@@ -53,8 +70,10 @@ async function main () {
       json: true
     }
 
+    console.log(to_log)
+
     response = await request(options)
-    console.log(response)
+    console.log('Server response code:', response)
   } catch (err) {
     console.error(err)
   }
