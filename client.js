@@ -1,10 +1,13 @@
 const asyncFs = require('async-file')
 const io = require('socket.io-client')
 const request = require('request-promise')
+const uuid = require('uuid/v1')
 
 const uri = 'http://localhost:3000/api/v1/containers/build'
 const clientToken = '1234-sunt-praf'
-const socket = io(uri, { query: { clientToken } })
+
+let clientUid = uuid()
+let socket = io(uri, { query: { clientUid } })
 
 socket.on('disconnect', function () {
   console.log('build process ended')
@@ -22,6 +25,7 @@ async function main () {
     )
 
     let jsonbody = {
+      clientUid,
       clientToken,
       registryUsername: credentials.username,
       registryPassword: credentials.password,
@@ -29,6 +33,7 @@ async function main () {
     }
 
     let to_log = {
+      clientUid,
       clientToken: '***',
       registryUsername: credentials.username,
       registryPassword: '*****',
